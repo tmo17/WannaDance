@@ -4,9 +4,9 @@ import random
 # Capactive Sensor 
 import time
 import board
-from random import *
 import busio
 import adafruit_mpr121
+import requests
 i2c = busio.I2C(board.SCL, board.SDA)
 mpr121 = adafruit_mpr121.MPR121(i2c)
 
@@ -33,6 +33,7 @@ column = [0,1,2,3,4,5]
 # Players' points
 player1 = 0
 player2 = 0
+plug_status = False
 
 # String inputted will be displayed to the LCD Screen
 def displayToLCD(strToDisplay):
@@ -46,60 +47,41 @@ def displayToLCD(strToDisplay):
     oled.show() # show all the changes we just made
 
 # Checks if user stepped on a tile and gives them points if they did
-def checkColumn(dance_columns):
+def checkTile(tile_to_tap):
     global player1
     global player2
-
+    global plug_status
+    
     time.sleep(5) # Give users time to step on a tile 
-    if mpr121[dance_columns[0]].value == True and mpr121[dance_columns[1]].value == True:
-        print("Player 1 and 2 get points")
-        player1 += 10
-        player2 += 10
-    elif mpr121[dance_columns[0]].value == True and mpr121[dance_columns[1]].value == False:
-        print("Player 1 gets points but not player 2")
-        player1 += 10
-    elif mpr121[dance_columns[0]].value == False and mpr121[dance_columns[1]].value == True:
-        print("Player 2 gets points but not player 1")
-        player2 += 10
-    else:
-        print("No one gets any points")
+    if mpr121[tile_to_tap[0]].value == True and mpr121[tile_to_tap[1]].value == True:
+        print("Toggle plug")
+        plug_status = not plug_status
 
-# Generates two random tiles that both players have to step on
-def randomColumn():
-    return randint(1, 3)
+        PARAMS = {}
+        toggle_URL = 'http://192.168.0.138/cm?cmnd=Power%20TOGGLE'
+        # sending get request and saving the response as response object
+        r = requests.get(url = toggle_URL)
+        
+        # extracting data in json format
+        data = r.json()
+        print(data)
+        
+        
 
 # Main game loop ran here
 def game():
     global player1
     global player2
+    global plug_status
 
+    plug_status = False
     while True:
         displayToLCD(f"Player1: {player1}\n Player2: {player2}")
         # my_stick.set_all_LED_color(214, 0, 0)
+        tile_to_tap = [0,11]
+        checkTile(tile_to_tap)
 
-        rand_column = randomColumn()
-        dance_columns = [(rand_column*2)-1,(rand_column*2)-2]
-        checkColumn(dance_columns)
 
-        if player1 >= 100 and player2 >= 100: # Check if any of the players have over 100 if so end the game
-            return "It is a tie!"
-        elif player1 >= 100: 
-            return "Player 1 has won!"
-        elif player2 >= 100:
-            return "Player 2 has won!"
-
-# Wait for two users to step on a tile 3 times 
-def checkIfGameStarted():
-    steps_on_tile = 0
-
-    while steps_on_tile < 3:
-        displayToLCD("Wanna Dance?")
-        for i in range(len(mpr121)): 
-            if mpr121[i].value == True:
-                steps_on_tile += 1
-            print("Number of times stepped on the same tile: " + str(steps_on_tile))
-            time.sleep(2)
-        
 
 # Game initialization and ending done here
 def main():
@@ -109,14 +91,8 @@ def main():
     #     return
     # print("\nLED Stick ready!")
 
-    # Wait for users to step on squares
-    checkIfGameStarted()
-
     # Start the game
     winner = game()
-
-    # Show game results on LCD
-    displayToLCD(winner)
 
 if __name__ == "__main__":
     main()
