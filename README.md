@@ -47,6 +47,10 @@ https://drive.google.com/file/d/1MZ_m2w_3HE83bu4nLB7K-AD5JYx3Pc-o/view?usp=shari
 * Week 15: Final product ready for demo and has been tested with users
 
 
+# Fall back plan
+* Make a musical instrument using different tiles that play different sounds
+
+
 # Verplank Diagram of the System:
 ![IMG_0486](https://user-images.githubusercontent.com/46539140/206017602-06789347-c7ac-4244-a381-73c01a4b4129.jpg)
 
